@@ -41,11 +41,13 @@
     </developer>
   </developers>
 
+
   <scm>
-    <connection>scm:svn:http://svn.codehaus.org/sonar-plugins/trunk/switch-off-violations</connection>
-    <developerConnection>scm:svn:https://svn.codehaus.org/sonar-plugins/trunk/switch-off-violations</developerConnection>
-    <url>http://svn.sonar-plugins.codehaus.org</url>
+    <connection>scm:git:git@github.com:SonarSource/sonar-switch-off-violations.git</connection>
+    <developerConnection>scm:git:git@github.com:SonarSource/sonar-switch-off-violations.git</developerConnection>
+    <url>https://github.com/SonarSource/sonar-switch-off-violations</url>
   </scm>
+
   <issueManagement>
     <system>JIRA</system>
     <url>http://jira.codehaus.org/browse/SONARPLUGINS/component/14708</url>
