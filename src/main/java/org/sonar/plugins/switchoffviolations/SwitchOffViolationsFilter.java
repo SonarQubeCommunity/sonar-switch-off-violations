@@ -27,6 +27,8 @@ import org.sonar.api.rules.ViolationFilter;
 import org.sonar.plugins.switchoffviolations.pattern.Pattern;
 import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 
+import java.util.List;
+
 public final class SwitchOffViolationsFilter implements ViolationFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(SwitchOffViolationsFilter.class);
@@ -44,10 +46,10 @@ public final class SwitchOffViolationsFilter implements ViolationFilter {
       return true;
     }
 
-    Pattern[] patterns = patternsInitializer.getStandardPatterns();
-    for (int index = 0; index < patterns.length; index++) {
-      if (patterns[index].match(violation)) {
-        logExclusion(violation, patterns[index]);
+    List<Pattern> patterns = patternsInitializer.getMulticriteriaPatterns();
+    for (Pattern pattern : patterns) {
+      if (pattern.match(violation)) {
+        logExclusion(violation, pattern);
         return true;
       }
     }

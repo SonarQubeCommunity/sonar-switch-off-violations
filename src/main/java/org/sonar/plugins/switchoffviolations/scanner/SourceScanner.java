@@ -48,7 +48,7 @@ public final class SourceScanner implements Sensor {
   }
 
   public boolean shouldExecuteOnProject(Project project) {
-    return patternsInitializer.getSingleRegexpPatterns().length > 0 || patternsInitializer.getDoubleRegexpPatterns().length > 0;
+    return patternsInitializer.getAllFilePatterns().size() > 0 || patternsInitializer.getBlockPatterns().size() > 0;
   }
 
   /**

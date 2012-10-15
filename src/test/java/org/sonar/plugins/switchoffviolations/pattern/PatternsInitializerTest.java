@@ -50,8 +50,7 @@ public class PatternsInitializerTest {
   @Test
   public void testNoConfiguration() {
     patternsInitializer.initPatterns();
-    Pattern[] patterns = patternsInitializer.getStandardPatterns();
-    assertThat(patterns.length).isEqualTo(0);
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(0);
   }
 
   @Test
@@ -59,8 +58,7 @@ public class PatternsInitializerTest {
     settings.setProperty(Constants.PATTERNS_PARAMETER_KEY, "org.foo.Bar;*;*\norg.foo.Hello;checkstyle:MagicNumber;[15-200]");
     patternsInitializer.initPatterns();
 
-    Pattern[] patterns = patternsInitializer.getStandardPatterns();
-    assertThat(patterns.length).isEqualTo(2);
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(2);
   }
 
   @Test
@@ -69,8 +67,7 @@ public class PatternsInitializerTest {
     settings.setProperty(Constants.LOCATION_PARAMETER_KEY, file.getCanonicalPath());
     patternsInitializer.initPatterns();
 
-    Pattern[] patterns = patternsInitializer.getStandardPatterns();
-    assertThat(patterns.length).isEqualTo(3);
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(3);
   }
 
   @Test
@@ -83,8 +80,7 @@ public class PatternsInitializerTest {
     settings.setProperty(Constants.PATTERNS_PARAMETER_KEY, patternsList);
     patternsInitializer.initPatterns();
 
-    Pattern[] patterns = patternsInitializer.getStandardPatterns();
-    assertThat(patterns.length).isEqualTo(1);
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(1);
   }
 
   @Test
@@ -92,9 +88,9 @@ public class PatternsInitializerTest {
     settings.setProperty(Constants.PATTERNS_PARAMETER_KEY, "SONAR-ALL-OFF\norg.foo.Bar;*;*\nSONAR-ALL-ON\norg.foo.Hello;checkstyle:MagicNumber;[15-200]\nSONAR-OFF;SONAR-ON");
     patternsInitializer.initPatterns();
 
-    assertThat(patternsInitializer.getStandardPatterns().length).isEqualTo(2);
-    assertThat(patternsInitializer.getDoubleRegexpPatterns().length).isEqualTo(1);
-    assertThat(patternsInitializer.getSingleRegexpPatterns().length).isEqualTo(2);
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(2);
+    assertThat(patternsInitializer.getBlockPatterns().size()).isEqualTo(1);
+    assertThat(patternsInitializer.getAllFilePatterns().size()).isEqualTo(2);
   }
 
   @Test
@@ -125,4 +121,45 @@ public class PatternsInitializerTest {
     patternsInitializer.initPatterns();
   }
 
+  @Test
+  public void shouldReturnMulticriteriaPattern() {
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY, "1,2");
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY + ".1." + Constants.RESOURCE_KEY, "org.foo.Bar");
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY + ".1." + Constants.RULE_KEY, "*");
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY + ".1." + Constants.RESOURCE_KEY, "*");
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY + ".2." + Constants.LINE_RANGE_KEY, "org.foo.Hello");
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY + ".2." + Constants.RULE_KEY, "checkstyle:MagicNumber");
+    settings.setProperty(Constants.PATTERNS_MULTICRITERIA_KEY + ".2." + Constants.LINE_RANGE_KEY, "[15-200]");
+    patternsInitializer.initPatterns();
+
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(2);
+    assertThat(patternsInitializer.getBlockPatterns().size()).isEqualTo(0);
+    assertThat(patternsInitializer.getAllFilePatterns().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void shouldReturnBlockPattern() {
+    settings.setProperty(Constants.PATTERNS_BLOCK_KEY, "1,2");
+    settings.setProperty(Constants.PATTERNS_BLOCK_KEY + ".1." + Constants.BEGIN_BLOCK_REGEXP, "// SONAR-OFF");
+    settings.setProperty(Constants.PATTERNS_BLOCK_KEY + ".1." + Constants.END_BLOCK_REGEXP, "// SONAR-ON");
+    settings.setProperty(Constants.PATTERNS_BLOCK_KEY + ".2." + Constants.BEGIN_BLOCK_REGEXP, "// FOO-OFF");
+    settings.setProperty(Constants.PATTERNS_BLOCK_KEY + ".2." + Constants.END_BLOCK_REGEXP, "// FOO-ON");
+    patternsInitializer.initPatterns();
+
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(0);
+    assertThat(patternsInitializer.getBlockPatterns().size()).isEqualTo(2);
+    assertThat(patternsInitializer.getAllFilePatterns().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void shouldReturnAllFilePattern() {
+    settings.setProperty(Constants.PATTERNS_ALLFILE_KEY, "1,2");
+    settings.setProperty(Constants.PATTERNS_ALLFILE_KEY + ".1." + Constants.FILE_REGEXP, "@SONAR-IGNORE-ALL");
+    settings.setProperty(Constants.PATTERNS_ALLFILE_KEY + ".2." + Constants.FILE_REGEXP, "//FOO-IGNORE-ALL");
+    patternsInitializer.initPatterns();
+
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(0);
+    assertThat(patternsInitializer.getBlockPatterns().size()).isEqualTo(0);
+    assertThat(patternsInitializer.getAllFilePatterns().size()).isEqualTo(2);
+  }
 }

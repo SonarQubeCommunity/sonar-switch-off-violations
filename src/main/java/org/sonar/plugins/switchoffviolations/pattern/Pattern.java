@@ -35,9 +35,9 @@ public class Pattern {
   private WildcardPattern rulePattern;
   private Set<Integer> lines = Sets.newLinkedHashSet();
   private Set<LineRange> lineRanges = Sets.newLinkedHashSet();
-  private String regexp1;
-
-  private String regexp2;
+  private String beginBlockRegexp;
+  private String endBlockRegexp;
+  private String allFileRegexp;
   private boolean checkLines = true;
 
   public Pattern() {
@@ -61,12 +61,16 @@ public class Pattern {
     return rulePattern;
   }
 
-  public String getRegexp1() {
-    return regexp1;
+  public String getBeginBlockRegexp() {
+    return beginBlockRegexp;
   }
 
-  public String getRegexp2() {
-    return regexp2;
+  public String getEndBlockRegexp() {
+    return endBlockRegexp;
+  }
+
+  public String getAllFileRegexp() {
+    return allFileRegexp;
   }
 
   Pattern addLineRange(int fromLineId, int toLineId) {
@@ -88,13 +92,18 @@ public class Pattern {
     return this;
   }
 
-  Pattern setRegexp1(String regexp1) {
-    this.regexp1 = regexp1;
+  Pattern setBeginBlockRegexp(String beginBlockRegexp) {
+    this.beginBlockRegexp = beginBlockRegexp;
     return this;
   }
 
-  Pattern setRegexp2(String regexp2) {
-    this.regexp2 = regexp2;
+  Pattern setEndBlockRegexp(String endBlockRegexp) {
+    this.endBlockRegexp = endBlockRegexp;
+    return this;
+  }
+
+  Pattern setAllFileRegexp(String allFileRegexp) {
+    this.allFileRegexp = allFileRegexp;
     return this;
   }
 

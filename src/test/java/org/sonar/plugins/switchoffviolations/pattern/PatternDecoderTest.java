@@ -127,18 +127,18 @@ public class PatternDecoderTest {
   }
 
   @Test
-  public void shouldReadDoubleRegexpPattern() {
+  public void shouldReadBlockPattern() {
     Pattern pattern = decoder.decodeLine("SONAR-OFF;SONAR-ON");
     assertThat(pattern.getResourcePattern()).isNull();
-    assertThat(pattern.getRegexp1()).isEqualTo("SONAR-OFF");
-    assertThat(pattern.getRegexp2()).isEqualTo("SONAR-ON");
+    assertThat(pattern.getBeginBlockRegexp()).isEqualTo("SONAR-OFF");
+    assertThat(pattern.getEndBlockRegexp()).isEqualTo("SONAR-ON");
   }
 
   @Test
-  public void shouldReadSingleRegexpPattern() {
+  public void shouldReadAllFilePattern() {
     Pattern pattern = decoder.decodeLine("SONAR-ALL-OFF");
     assertThat(pattern.getResourcePattern()).isNull();
-    assertThat(pattern.getRegexp1()).isEqualTo("SONAR-ALL-OFF");
+    assertThat(pattern.getAllFileRegexp()).isEqualTo("SONAR-ALL-OFF");
   }
 
   @Test

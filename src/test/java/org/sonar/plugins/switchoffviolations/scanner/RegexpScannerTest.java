@@ -33,6 +33,7 @@ import org.sonar.test.TestUtils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Set;
 
 import static org.mockito.Mockito.times;
@@ -50,27 +51,27 @@ public class RegexpScannerTest {
   @Mock
   private PatternsInitializer patternsInitializer;
   @Mock
-  private Pattern singleRegexpPattern;
+  private Pattern allFilePattern;
   @Mock
-  private Pattern doubleRegexpPattern1;
+  private Pattern blockPattern1;
   @Mock
-  private Pattern doubleRegexpPattern2;
+  private Pattern blockPattern2;
 
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
 
-    when(singleRegexpPattern.getRegexp1()).thenReturn("@SONAR-IGNORE-ALL");
-    when(doubleRegexpPattern1.getRegexp1()).thenReturn("// SONAR-OFF");
-    when(doubleRegexpPattern1.getRegexp2()).thenReturn("// SONAR-ON");
-    when(doubleRegexpPattern2.getRegexp1()).thenReturn("// FOO-OFF");
-    when(doubleRegexpPattern2.getRegexp2()).thenReturn("// FOO-ON");
-    when(patternsInitializer.getSingleRegexpPatterns()).thenReturn(new Pattern[] {singleRegexpPattern});
-    when(patternsInitializer.getDoubleRegexpPatterns()).thenReturn(new Pattern[] {doubleRegexpPattern1, doubleRegexpPattern2});
+    when(allFilePattern.getAllFileRegexp()).thenReturn("@SONAR-IGNORE-ALL");
+    when(blockPattern1.getBeginBlockRegexp()).thenReturn("// SONAR-OFF");
+    when(blockPattern1.getEndBlockRegexp()).thenReturn("// SONAR-ON");
+    when(blockPattern2.getBeginBlockRegexp()).thenReturn("// FOO-OFF");
+    when(blockPattern2.getEndBlockRegexp()).thenReturn("// FOO-ON");
+    when(patternsInitializer.getAllFilePatterns()).thenReturn(Arrays.asList(allFilePattern));
+    when(patternsInitializer.getBlockPatterns()).thenReturn(Arrays.asList(blockPattern1, blockPattern2));
 
     regexpScanner = new RegexpScanner(patternsInitializer);
-    verify(patternsInitializer, times(1)).getSingleRegexpPatterns();
-    verify(patternsInitializer, times(1)).getDoubleRegexpPatterns();
+    verify(patternsInitializer, times(1)).getAllFilePatterns();
+    verify(patternsInitializer, times(1)).getBlockPatterns();
 
     javaFile = new JavaFile("org.sonar.test.MyFile");
   }

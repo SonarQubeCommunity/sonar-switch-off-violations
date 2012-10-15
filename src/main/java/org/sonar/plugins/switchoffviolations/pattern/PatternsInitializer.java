@@ -42,9 +42,9 @@ public class PatternsInitializer implements BatchExtension {
   private static final Logger LOG = LoggerFactory.getLogger(PatternsInitializer.class);
 
   private Settings settings;
-  private Pattern[] standardPatterns;
-  private Pattern[] doubleRegexpPatterns;
-  private Pattern[] singleRegexpPatterns;
+  private List<Pattern> multicriteriaPatterns;
+  private List<Pattern> blockPatterns;
+  private List<Pattern> allFilePatterns;
   private Map<Resource<?>, Pattern> extraPatternByResource = Maps.newHashMap();
 
   public PatternsInitializer(Settings settings) {
@@ -52,22 +52,16 @@ public class PatternsInitializer implements BatchExtension {
     initPatterns();
   }
 
-  public Pattern[] getStandardPatterns() {
-    return copyArray(standardPatterns);
+  public List<Pattern> getMulticriteriaPatterns() {
+    return multicriteriaPatterns;
   }
 
-  public Pattern[] getDoubleRegexpPatterns() {
-    return copyArray(doubleRegexpPatterns);
+  public List<Pattern> getBlockPatterns() {
+    return blockPatterns;
   }
 
-  public Pattern[] getSingleRegexpPatterns() {
-    return copyArray(singleRegexpPatterns);
-  }
-
-  private Pattern[] copyArray(Pattern[] array) {
-    // just to not have the annoying error "May expose internal representation by returning reference to mutable object"
-    // as for performance issues, we do not want to copy the arrays everytime the methods are called
-    return array;
+  public List<Pattern> getAllFilePatterns() {
+    return allFilePatterns;
   }
 
   public Pattern getExtraPattern(Resource<?> resource) {
@@ -76,67 +70,50 @@ public class PatternsInitializer implements BatchExtension {
 
   @VisibleForTesting
   protected final void initPatterns() {
-    List<Pattern> standardPatternList = Lists.newArrayList();
-    List<Pattern> doubleRegexpPatternList = Lists.newArrayList();
-    List<Pattern> singleRegexpPatternList = Lists.newArrayList();
 
-    List<Pattern> patterns = Lists.newArrayList();
-    patterns.addAll(loadPatternsFromNewProperties());
-    patterns.addAll(loadPatternsFromDeprecatedProperties());
+    multicriteriaPatterns = Lists.newArrayList();
+    blockPatterns = Lists.newArrayList();
+    allFilePatterns = Lists.newArrayList();
 
-    for (Pattern pattern : patterns) {
-      if (pattern.getResourcePattern() != null) {
-        standardPatternList.add(pattern);
-      } else if (pattern.getRegexp2() != null) {
-        doubleRegexpPatternList.add(pattern);
-      } else {
-        singleRegexpPatternList.add(pattern);
-      }
-    }
+    loadPatternsFromNewProperties();
+    loadPatternsFromDeprecatedProperties();
 
-    standardPatterns = standardPatternList.toArray(new Pattern[standardPatternList.size()]);
-    doubleRegexpPatterns = doubleRegexpPatternList.toArray(new Pattern[doubleRegexpPatternList.size()]);
-    singleRegexpPatterns = singleRegexpPatternList.toArray(new Pattern[singleRegexpPatternList.size()]);
   }
 
-  private List<Pattern> loadPatternsFromNewProperties() {
-    List<Pattern> patterns = Lists.newArrayList();
-
-    // Patterns A1
-    String patternConf = StringUtils.defaultIfBlank(settings.getString(Constants.PATTERNS_A1_KEY), "");
+  private void loadPatternsFromNewProperties() {
+    // Patterns Multicriteria
+    String patternConf = StringUtils.defaultIfBlank(settings.getString(Constants.PATTERNS_MULTICRITERIA_KEY), "");
     for (String id : StringUtils.split(patternConf, ',')) {
-      String propPrefix = Constants.PATTERNS_A1_KEY + "." + id + ".";
+      String propPrefix = Constants.PATTERNS_MULTICRITERIA_KEY + "." + id + ".";
       String resourceKeyPattern = settings.getString(propPrefix + Constants.RESOURCE_KEY);
       String ruleKeyPattern = settings.getString(propPrefix + Constants.RULE_KEY);
       Pattern pattern = new Pattern(resourceKeyPattern == null ? "*" : resourceKeyPattern, ruleKeyPattern == null ? "*" : ruleKeyPattern);
       String lineRange = settings.getString(propPrefix + Constants.LINE_RANGE_KEY);
       PatternDecoder.decodeRangeOfLines(pattern, lineRange == null ? "*" : lineRange);
-      patterns.add(pattern);
+      multicriteriaPatterns.add(pattern);
     }
 
-    // Patterns A2
-    patternConf = StringUtils.defaultIfBlank(settings.getString(Constants.PATTERNS_A2_KEY), "");
+    // Patterns Block
+    patternConf = StringUtils.defaultIfBlank(settings.getString(Constants.PATTERNS_BLOCK_KEY), "");
     for (String id : StringUtils.split(patternConf, ',')) {
-      String propPrefix = Constants.PATTERNS_A2_KEY + "." + id + ".";
-      String regexp1 = settings.getString(propPrefix + Constants.REGEXP1);
-      String regexp2 = settings.getString(propPrefix + Constants.REGEXP2);
-      Pattern pattern = new Pattern().setRegexp1(regexp1 == null ? "" : regexp1).setRegexp2(regexp2 == null ? "" : regexp2);
-      patterns.add(pattern);
+      String propPrefix = Constants.PATTERNS_BLOCK_KEY + "." + id + ".";
+      String beginBlockRegexp = settings.getString(propPrefix + Constants.BEGIN_BLOCK_REGEXP);
+      String endBlockRegexp = settings.getString(propPrefix + Constants.END_BLOCK_REGEXP);
+      Pattern pattern = new Pattern().setBeginBlockRegexp(beginBlockRegexp == null ? "" : beginBlockRegexp).setEndBlockRegexp(endBlockRegexp == null ? "" : endBlockRegexp);
+      blockPatterns.add(pattern);
     }
 
-    // Patterns A3
-    patternConf = StringUtils.defaultIfBlank(settings.getString(Constants.PATTERNS_A3_KEY), "");
+    // Patterns All File
+    patternConf = StringUtils.defaultIfBlank(settings.getString(Constants.PATTERNS_ALLFILE_KEY), "");
     for (String id : StringUtils.split(patternConf, ',')) {
-      String propPrefix = Constants.PATTERNS_A3_KEY + "." + id + ".";
-      String regexp = settings.getString(propPrefix + Constants.REGEXP);
-      Pattern pattern = new Pattern().setRegexp1(regexp == null ? "" : regexp);
-      patterns.add(pattern);
+      String propPrefix = Constants.PATTERNS_ALLFILE_KEY + "." + id + ".";
+      String allFileRegexp = settings.getString(propPrefix + Constants.FILE_REGEXP);
+      Pattern pattern = new Pattern().setAllFileRegexp(allFileRegexp == null ? "" : allFileRegexp);
+      allFilePatterns.add(pattern);
     }
-
-    return patterns;
   }
 
-  private List<Pattern> loadPatternsFromDeprecatedProperties() {
+  private void loadPatternsFromDeprecatedProperties() {
     String patternConf = settings.getString(Constants.PATTERNS_PARAMETER_KEY);
     String fileLocation = settings.getString(Constants.LOCATION_PARAMETER_KEY);
     List<Pattern> list = Lists.newArrayList();
@@ -147,7 +124,16 @@ public class PatternsInitializer implements BatchExtension {
       LOG.info("Switch Off Violations plugin configured with: " + file.getAbsolutePath());
       list = new PatternDecoder().decode(file);
     }
-    return list;
+
+    for (Pattern pattern : list) {
+      if (pattern.getResourcePattern() != null) {
+        multicriteriaPatterns.add(pattern);
+      } else if (pattern.getBeginBlockRegexp() != null) {
+        blockPatterns.add(pattern);
+      } else {
+        allFilePatterns.add(pattern);
+      }
+    }
   }
 
   private File locateFile(String location) {

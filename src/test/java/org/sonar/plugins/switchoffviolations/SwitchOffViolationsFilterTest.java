@@ -30,6 +30,7 @@ import org.sonar.plugins.switchoffviolations.pattern.PatternDecoder;
 import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import static org.fest.assertions.Assertions.assertThat;
@@ -47,7 +48,7 @@ public class SwitchOffViolationsFilterTest {
   @Before
   public void init() {
     patternsInitializer = mock(PatternsInitializer.class);
-    when(patternsInitializer.getStandardPatterns()).thenReturn(new Pattern[0]);
+    when(patternsInitializer.getMulticriteriaPatterns()).thenReturn(Collections.<Pattern> emptyList());
 
     filter = new SwitchOffViolationsFilter(patternsInitializer);
   }
@@ -59,34 +60,33 @@ public class SwitchOffViolationsFilterTest {
 
   @Test
   public void shouldBeIgnoredWithStandardPatterns() throws IOException {
-    when(patternsInitializer.getStandardPatterns()).thenReturn(createPatterns("org.foo.Bar;*;*\norg.foo.Hello;checkstyle:MagicNumber;[15-200]"));
+    when(patternsInitializer.getMulticriteriaPatterns()).thenReturn(createPatterns("org.foo.Bar;*;*\norg.foo.Hello;checkstyle:MagicNumber;[15-200]"));
 
     assertThat(filter.isIgnored(Violation.create(CHECKSTYLE_RULE, JAVA_FILE).setLineId(150))).isTrue();
   }
 
   @Test
   public void shouldNotBeIgnoredWithStandardPatterns() throws IOException {
-    when(patternsInitializer.getStandardPatterns()).thenReturn(createPatterns("org.foo.Bar;*;*\norg.foo.Hello;checkstyle:MagicNumber;[15-200]"));
+    when(patternsInitializer.getMulticriteriaPatterns()).thenReturn(createPatterns("org.foo.Bar;*;*\norg.foo.Hello;checkstyle:MagicNumber;[15-200]"));
 
     assertThat(filter.isIgnored(Violation.create(CHECKSTYLE_RULE, JAVA_FILE).setLineId(5))).isFalse();
   }
 
   @Test
   public void shouldBeIgnoredWithExtraPattern() throws IOException {
-    when(patternsInitializer.getExtraPattern(JAVA_FILE)).thenReturn(createPatterns("org.foo.Hello;*;[15-200]")[0]);
+    when(patternsInitializer.getExtraPattern(JAVA_FILE)).thenReturn(createPatterns("org.foo.Hello;*;[15-200]").get(0));
 
     assertThat(filter.isIgnored(Violation.create(CHECKSTYLE_RULE, JAVA_FILE).setLineId(150))).isTrue();
   }
 
   @Test
   public void shouldNotBeIgnoredWithExtraPattern() throws IOException {
-    when(patternsInitializer.getExtraPattern(JAVA_FILE)).thenReturn(createPatterns("org.foo.Hello;*;[15-200]")[0]);
+    when(patternsInitializer.getExtraPattern(JAVA_FILE)).thenReturn(createPatterns("org.foo.Hello;*;[15-200]").get(0));
 
     assertThat(filter.isIgnored(Violation.create(CHECKSTYLE_RULE, JAVA_FILE).setLineId(5))).isFalse();
   }
 
-  private Pattern[] createPatterns(String line) {
-    List<Pattern> patterns = new PatternDecoder().decode(line);
-    return patterns.toArray(new Pattern[patterns.size()]);
+  private List<Pattern> createPatterns(String line) {
+    return new PatternDecoder().decode(line);
   }
 }

@@ -42,8 +42,8 @@ public class RegexpScanner implements BatchExtension {
   private static final Logger LOG = LoggerFactory.getLogger(RegexpScanner.class);
 
   private PatternsInitializer patternsInitializer;
-  private List<java.util.regex.Pattern> singleRegexpPatterns;
-  private List<DoubleRegexpMatcher> doubleRegexpMatchers;
+  private List<java.util.regex.Pattern> allFilePatterns;
+  private List<DoubleRegexpMatcher> blockMatchers;
 
   // fields to be reset at every new scan
   private DoubleRegexpMatcher currentMatcher;
@@ -55,16 +55,16 @@ public class RegexpScanner implements BatchExtension {
     this.patternsInitializer = patternsInitializer;
 
     lineExclusions = Lists.newArrayList();
-    singleRegexpPatterns = Lists.newArrayList();
-    doubleRegexpMatchers = Lists.newArrayList();
+    allFilePatterns = Lists.newArrayList();
+    blockMatchers = Lists.newArrayList();
 
-    for (Pattern pattern : this.patternsInitializer.getSingleRegexpPatterns()) {
-      singleRegexpPatterns.add(java.util.regex.Pattern.compile(pattern.getRegexp1()));
+    for (Pattern pattern : this.patternsInitializer.getAllFilePatterns()) {
+      allFilePatterns.add(java.util.regex.Pattern.compile(pattern.getAllFileRegexp()));
     }
-    for (Pattern pattern : this.patternsInitializer.getDoubleRegexpPatterns()) {
-      doubleRegexpMatchers.add(new DoubleRegexpMatcher(
-          java.util.regex.Pattern.compile(pattern.getRegexp1()),
-          java.util.regex.Pattern.compile(pattern.getRegexp2())));
+    for (Pattern pattern : this.patternsInitializer.getBlockPatterns()) {
+      blockMatchers.add(new DoubleRegexpMatcher(
+          java.util.regex.Pattern.compile(pattern.getBeginBlockRegexp()),
+          java.util.regex.Pattern.compile(pattern.getEndBlockRegexp())));
     }
 
     init();
@@ -90,7 +90,7 @@ public class RegexpScanner implements BatchExtension {
       }
 
       // first check the single regexp patterns that can be used to totally exclude a file
-      for (java.util.regex.Pattern pattern : singleRegexpPatterns) {
+      for (java.util.regex.Pattern pattern : allFilePatterns) {
         if (pattern.matcher(line).find()) {
           patternsInitializer.addPatternToExcludeResource(resource);
           // nothing more to do on this file
@@ -122,7 +122,7 @@ public class RegexpScanner implements BatchExtension {
 
   private void checkDoubleRegexps(String line, int lineIndex) {
     if (currentMatcher == null) {
-      for (DoubleRegexpMatcher matcher : doubleRegexpMatchers) {
+      for (DoubleRegexpMatcher matcher : blockMatchers) {
         if (matcher.matchesFirstPattern(line)) {
           startExclusion(lineIndex);
           currentMatcher = matcher;

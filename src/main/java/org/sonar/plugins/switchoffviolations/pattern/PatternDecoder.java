@@ -83,9 +83,9 @@ public class PatternDecoder {
       decodeRangeOfLines(pattern, fields[2]);
     } else if (fields.length == 2) {
       checkDoubleRegexpLineConstraints(line, fields);
-      pattern = new Pattern().setRegexp1(fields[0]).setRegexp2(fields[1]);
+      pattern = new Pattern().setBeginBlockRegexp(fields[0]).setEndBlockRegexp(fields[1]);
     } else {
-      pattern = new Pattern().setRegexp1(fields[0]);
+      pattern = new Pattern().setAllFileRegexp(fields[0]);
     }
 
     return pattern;

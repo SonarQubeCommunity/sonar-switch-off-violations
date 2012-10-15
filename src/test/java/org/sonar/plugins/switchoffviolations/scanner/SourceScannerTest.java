@@ -35,6 +35,8 @@ import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -89,15 +91,15 @@ public class SourceScannerTest {
 
   @Test
   public void shouldExecute() throws IOException {
-    when(patternsInitializer.getSingleRegexpPatterns()).thenReturn(new Pattern[2]);
+    when(patternsInitializer.getAllFilePatterns()).thenReturn(Arrays.asList(new Pattern(), new Pattern()));
     assertThat(scanner.shouldExecuteOnProject(null)).isTrue();
 
-    when(patternsInitializer.getSingleRegexpPatterns()).thenReturn(new Pattern[0]);
-    when(patternsInitializer.getDoubleRegexpPatterns()).thenReturn(new Pattern[2]);
+    when(patternsInitializer.getAllFilePatterns()).thenReturn(Collections.<Pattern> emptyList());
+    when(patternsInitializer.getBlockPatterns()).thenReturn(Arrays.asList(new Pattern(), new Pattern()));
     assertThat(scanner.shouldExecuteOnProject(null)).isTrue();
 
-    when(patternsInitializer.getSingleRegexpPatterns()).thenReturn(new Pattern[0]);
-    when(patternsInitializer.getDoubleRegexpPatterns()).thenReturn(new Pattern[0]);
+    when(patternsInitializer.getAllFilePatterns()).thenReturn(Collections.<Pattern> emptyList());
+    when(patternsInitializer.getBlockPatterns()).thenReturn(Collections.<Pattern> emptyList());
     assertThat(scanner.shouldExecuteOnProject(null)).isFalse();
   }
 
