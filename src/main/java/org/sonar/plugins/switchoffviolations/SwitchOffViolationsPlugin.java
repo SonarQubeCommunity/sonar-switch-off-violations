@@ -36,7 +36,7 @@ import java.util.List;
   @Property(
     key = Constants.PATTERNS_MULTICRITERIA_KEY,
     name = "Multi-criteria exclusion patterns",
-    description = "Patterns used to identify which violations to switch off." +
+    description = "Patterns used to identify which violations to switch off.<br/>" +
       "More information on the <a href=\"http://docs.codehaus.org/display/SONAR/Switch+Off+Violations+Plugin\">documentation page of the plugin</a>.<br/>",
     project = true,
     global = true,
@@ -62,7 +62,7 @@ import java.util.List;
   @Property(
     key = Constants.PATTERNS_BLOCK_KEY,
     name = "Bloc exclusion patterns",
-    description = "Patterns used to identify blocks in which violations are switched off." +
+    description = "Patterns used to identify blocks in which violations are switched off.<br/>" +
       "More information on the <a href=\"http://docs.codehaus.org/display/SONAR/Switch+Off+Violations+Plugin\">documentation page of the plugin</a>.<br/>",
     project = true,
     global = true,
@@ -77,13 +77,13 @@ import java.util.List;
         key = Constants.END_BLOCK_REGEXP,
         name = "Regular expression for end of block",
         description =
-        "If specified, this regular expression is used to determine the end of code blocks to ignore. If not, then block ends at the end of file",
+        "If specified, this regular expression is used to determine the end of code blocks to ignore. If not, then block ends at the end of file.",
         type = PropertyType.STRING,
         indicativeSize = 20)}),
   @Property(
     key = Constants.PATTERNS_ALLFILE_KEY,
     name = "File exclusion patterns",
-    description = "Patterns used to identify files in which violations are switched off." +
+    description = "Patterns used to identify files in which violations are switched off.<br/>" +
       "More information on the <a href=\"http://docs.codehaus.org/display/SONAR/Switch+Off+Violations+Plugin\">documentation page of the plugin</a>.<br/>",
     project = true,
     global = true,
@@ -98,7 +98,7 @@ import java.util.List;
     key = Constants.PATTERNS_PARAMETER_KEY,
     defaultValue = "",
     name = "Exclusion patterns (Deprecated)",
-    description = "Patterns used to identify which violations to switch off." +
+    description = "Patterns used to identify which violations to switch off.<br/>" +
       "Example:<br/><pre># exclude a specific rule on a specific file on specific lines\ncom.foo.Bar;pmd:AvoidPrintStackTrace;[10,25,90]</pre>" +
       "<br/>More information on the <a href=\"http://docs.codehaus.org/display/SONAR/Switch+Off+Violations+Plugin\">documentation page of the plugin</a>.<br/><br/>",
     project = true,
