@@ -11,7 +11,7 @@
 
   <artifactId>sonar-switch-off-violations-plugin</artifactId>
   <packaging>sonar-plugin</packaging>
-  <version>1.3</version>
+  <version>1.4-SNAPSHOT</version>
   <name>Sonar Switch Off Violations Plugin</name>
   <description>Filter out chosen violations from analysis</description>
   <url>http://docs.codehaus.org/display/SONAR/Switch+Off+Violations+Plugin</url>
