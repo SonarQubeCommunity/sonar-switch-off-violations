@@ -48,9 +48,9 @@
 
 
   <scm>
-    <connection>scm:git:git@github.com:SonarSource/sonar-switch-off-violations.git</connection>
-    <developerConnection>scm:git:git@github.com:SonarSource/sonar-switch-off-violations.git</developerConnection>
-    <url>https://github.com/SonarSource/sonar-switch-off-violations</url>
+    <connection>scm:git:git@github.com:SonarCommunity/sonar-switch-off-violations.git</connection>
+    <developerConnection>scm:git:git@github.com:SonarCommunity/sonar-switch-off-violations.git</developerConnection>
+    <url>https://github.com/SonarCommunity/sonar-switch-off-violations</url>
   </scm>
 
   <issueManagement>
