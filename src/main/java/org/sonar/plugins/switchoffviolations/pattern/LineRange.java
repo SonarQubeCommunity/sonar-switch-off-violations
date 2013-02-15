@@ -25,7 +25,8 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 
 public class LineRange {
-  int from, to;
+  private int from;
+  private int to;
 
   public LineRange(int from, int to) {
     if (to < from) {

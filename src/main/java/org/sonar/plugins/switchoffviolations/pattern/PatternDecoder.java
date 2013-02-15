@@ -32,7 +32,8 @@ import java.util.List;
 
 public class PatternDecoder {
 
-  static final String LINE_RANGE_REGEXP = "\\[((\\d+|\\d+-\\d+),?)*\\]";
+  private static final int THREE_FIELDS_PER_LINE = 3;
+  private static final String LINE_RANGE_REGEXP = "\\[((\\d+|\\d+-\\d+),?)*\\]";
 
   public List<Pattern> decode(String patternsList) {
     List<Pattern> patterns = Lists.newLinkedList();
@@ -72,12 +73,12 @@ public class PatternDecoder {
     }
 
     String[] fields = StringUtils.splitPreserveAllTokens(line, ';');
-    if (fields.length > 3) {
+    if (fields.length > THREE_FIELDS_PER_LINE) {
       throw new SonarException("Invalid format. The following line has more than 3 fields separated by comma: " + line);
     }
 
     Pattern pattern;
-    if (fields.length == 3) {
+    if (fields.length == THREE_FIELDS_PER_LINE) {
       checkRegularLineConstraints(line, fields);
       pattern = new Pattern(StringUtils.trim(fields[0]), StringUtils.trim(fields[1]));
       decodeRangeOfLines(pattern, fields[2]);
