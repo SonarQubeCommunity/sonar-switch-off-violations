@@ -32,18 +32,16 @@ import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 import org.sonar.test.TestUtils;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Set;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class RegexpScannerTest {
-
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private RegexpScanner regexpScanner;
 

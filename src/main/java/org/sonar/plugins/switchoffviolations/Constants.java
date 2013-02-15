@@ -21,9 +21,6 @@
 package org.sonar.plugins.switchoffviolations;
 
 public interface Constants {
-  String PLUGIN_KEY = "switchoffviolations";
-  String PLUGIN_NAME = "Switch Off Violations";
-
   // New Properties
   String PATTERNS_MULTICRITERIA_KEY = "sonar.switchoffviolations.multicriteria";
   String RESOURCE_KEY = "resourceKey";

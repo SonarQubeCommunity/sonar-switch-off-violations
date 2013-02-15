@@ -63,7 +63,7 @@ public final class SourceScanner implements Sensor {
     ProjectFileSystem fileSystem = project.getFileSystem();
     Charset sourcesEncoding = fileSystem.getSourceCharset();
 
-    List<InputFile> files = null;
+    List<InputFile> files;
     if (isTest) {
       files = fileSystem.testFiles(project.getLanguageKey());
     } else {
@@ -88,7 +88,7 @@ public final class SourceScanner implements Sensor {
    * This method is necessary because Java resources are not treated as every other resource...
    */
   private Resource<?> defineResource(InputFile inputFile, Project project, boolean isTest) {
-    Resource<?> resource = null;
+    Resource<?> resource;
     if (Java.KEY.equals(project.getLanguageKey()) && Java.isJavaFile(inputFile.getFile())) {
       resource = JavaFile.fromRelativePath(inputFile.getRelativePath(), isTest);
     } else {

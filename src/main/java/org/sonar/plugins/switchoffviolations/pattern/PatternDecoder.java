@@ -76,7 +76,7 @@ public class PatternDecoder {
       throw new SonarException("Unvalid format. The following line has more than 3 fields separated by comma: " + line);
     }
 
-    Pattern pattern = null;
+    Pattern pattern;
     if (fields.length == 3) {
       checkRegularLineConstraints(line, fields);
       pattern = new Pattern(StringUtils.trim(fields[0]), StringUtils.trim(fields[1]));

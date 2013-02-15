@@ -34,18 +34,16 @@ import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class SourceScannerTest {
-
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private SourceScanner scanner;
 

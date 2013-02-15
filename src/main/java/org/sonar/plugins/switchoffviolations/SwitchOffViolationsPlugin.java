@@ -20,6 +20,8 @@
 
 package org.sonar.plugins.switchoffviolations;
 
+import com.google.common.collect.ImmutableList;
+import org.sonar.api.BatchExtension;
 import org.sonar.api.Properties;
 import org.sonar.api.Property;
 import org.sonar.api.PropertyField;
@@ -29,7 +31,6 @@ import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 import org.sonar.plugins.switchoffviolations.scanner.RegexpScanner;
 import org.sonar.plugins.switchoffviolations.scanner.SourceScanner;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Properties({
@@ -114,9 +115,8 @@ import java.util.List;
 })
 public final class SwitchOffViolationsPlugin extends SonarPlugin {
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public List getExtensions() {
-    return Arrays.asList(
+  public List<Class<? extends BatchExtension>> getExtensions() {
+    return ImmutableList.of(
         PatternsInitializer.class,
         RegexpScanner.class,
         SourceScanner.class,
