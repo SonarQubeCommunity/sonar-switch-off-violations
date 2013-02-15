@@ -32,7 +32,8 @@ import java.util.List;
 
 public class PatternDecoder {
 
-  static final String LINE_RANGE_REGEXP = "\\[((\\d+|\\d+-\\d+),?)*\\]";
+  private static final int THREE_FIELDS_PER_LINE = 3;
+  private static final String LINE_RANGE_REGEXP = "\\[((\\d+|\\d+-\\d+),?)*\\]";
 
   public List<Pattern> decode(String patternsList) {
     List<Pattern> patterns = Lists.newLinkedList();
@@ -72,12 +73,12 @@ public class PatternDecoder {
     }
 
     String[] fields = StringUtils.splitPreserveAllTokens(line, ';');
-    if (fields.length > 3) {
-      throw new SonarException("Unvalid format. The following line has more than 3 fields separated by comma: " + line);
+    if (fields.length > THREE_FIELDS_PER_LINE) {
+      throw new SonarException("Invalid format. The following line has more than 3 fields separated by comma: " + line);
     }
 
-    Pattern pattern = null;
-    if (fields.length == 3) {
+    Pattern pattern;
+    if (fields.length == THREE_FIELDS_PER_LINE) {
       checkRegularLineConstraints(line, fields);
       pattern = new Pattern(StringUtils.trim(fields[0]), StringUtils.trim(fields[1]));
       decodeRangeOfLines(pattern, fields[2]);
@@ -93,22 +94,22 @@ public class PatternDecoder {
 
   private void checkRegularLineConstraints(String line, String[] fields) {
     if (!isResource(fields[0])) {
-      throw new SonarException("Unvalid format. The first field does not define a resource pattern: " + line);
+      throw new SonarException("Invalid format. The first field does not define a resource pattern: " + line);
     }
     if (!isRule(fields[1])) {
-      throw new SonarException("Unvalid format. The second field does not define a rule pattern: " + line);
+      throw new SonarException("Invalid format. The second field does not define a rule pattern: " + line);
     }
     if (!isLinesRange(fields[2])) {
-      throw new SonarException("Unvalid format. The third field does not define a range of lines: " + line);
+      throw new SonarException("Invalid format. The third field does not define a range of lines: " + line);
     }
   }
 
   private void checkDoubleRegexpLineConstraints(String line, String[] fields) {
     if (!isRegexp(fields[0])) {
-      throw new SonarException("Unvalid format. The first field does not define a regular expression: " + line);
+      throw new SonarException("Invalid format. The first field does not define a regular expression: " + line);
     }
     if (!isRegexp(fields[1])) {
-      throw new SonarException("Unvalid format. The second field does not define a regular expression: " + line);
+      throw new SonarException("Invalid format. The second field does not define a regular expression: " + line);
     }
   }
 

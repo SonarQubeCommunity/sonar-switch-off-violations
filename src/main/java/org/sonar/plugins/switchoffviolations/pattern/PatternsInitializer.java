@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.BatchExtension;
 import org.sonar.api.config.Settings;
+import org.sonar.api.resources.ProjectFileSystem;
 import org.sonar.api.resources.Resource;
 import org.sonar.api.utils.SonarException;
 import org.sonar.plugins.switchoffviolations.Constants;
@@ -37,18 +38,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.Strings.nullToEmpty;
+
 public class PatternsInitializer implements BatchExtension {
 
   private static final Logger LOG = LoggerFactory.getLogger(PatternsInitializer.class);
 
-  private Settings settings;
+  private final Settings settings;
+  private final ProjectFileSystem projectFileSystem;
+
   private List<Pattern> multicriteriaPatterns;
   private List<Pattern> blockPatterns;
   private List<Pattern> allFilePatterns;
   private Map<Resource<?>, Pattern> extraPatternByResource = Maps.newHashMap();
 
-  public PatternsInitializer(Settings settings) {
+  public PatternsInitializer(Settings settings, ProjectFileSystem projectFileSystem) {
     this.settings = settings;
+    this.projectFileSystem = projectFileSystem;
     initPatterns();
   }
 
@@ -70,14 +77,12 @@ public class PatternsInitializer implements BatchExtension {
 
   @VisibleForTesting
   protected final void initPatterns() {
-
     multicriteriaPatterns = Lists.newArrayList();
     blockPatterns = Lists.newArrayList();
     allFilePatterns = Lists.newArrayList();
 
     loadPatternsFromNewProperties();
     loadPatternsFromDeprecatedProperties();
-
   }
 
   private void loadPatternsFromNewProperties() {
@@ -87,9 +92,9 @@ public class PatternsInitializer implements BatchExtension {
       String propPrefix = Constants.PATTERNS_MULTICRITERIA_KEY + "." + id + ".";
       String resourceKeyPattern = settings.getString(propPrefix + Constants.RESOURCE_KEY);
       String ruleKeyPattern = settings.getString(propPrefix + Constants.RULE_KEY);
-      Pattern pattern = new Pattern(resourceKeyPattern == null ? "*" : resourceKeyPattern, ruleKeyPattern == null ? "*" : ruleKeyPattern);
+      Pattern pattern = new Pattern(firstNonNull(resourceKeyPattern, "*"), firstNonNull(ruleKeyPattern, "*"));
       String lineRange = settings.getString(propPrefix + Constants.LINE_RANGE_KEY);
-      PatternDecoder.decodeRangeOfLines(pattern, lineRange == null ? "*" : lineRange);
+      PatternDecoder.decodeRangeOfLines(pattern, firstNonNull(lineRange, "*"));
       multicriteriaPatterns.add(pattern);
     }
 
@@ -99,7 +104,7 @@ public class PatternsInitializer implements BatchExtension {
       String propPrefix = Constants.PATTERNS_BLOCK_KEY + "." + id + ".";
       String beginBlockRegexp = settings.getString(propPrefix + Constants.BEGIN_BLOCK_REGEXP);
       String endBlockRegexp = settings.getString(propPrefix + Constants.END_BLOCK_REGEXP);
-      Pattern pattern = new Pattern().setBeginBlockRegexp(beginBlockRegexp == null ? "" : beginBlockRegexp).setEndBlockRegexp(endBlockRegexp == null ? "" : endBlockRegexp);
+      Pattern pattern = new Pattern().setBeginBlockRegexp(nullToEmpty(beginBlockRegexp)).setEndBlockRegexp(nullToEmpty(endBlockRegexp));
       blockPatterns.add(pattern);
     }
 
@@ -108,7 +113,7 @@ public class PatternsInitializer implements BatchExtension {
     for (String id : StringUtils.split(patternConf, ',')) {
       String propPrefix = Constants.PATTERNS_ALLFILE_KEY + "." + id + ".";
       String allFileRegexp = settings.getString(propPrefix + Constants.FILE_REGEXP);
-      Pattern pattern = new Pattern().setAllFileRegexp(allFileRegexp == null ? "" : allFileRegexp);
+      Pattern pattern = new Pattern().setAllFileRegexp(nullToEmpty(allFileRegexp));
       allFilePatterns.add(pattern);
     }
   }
@@ -137,7 +142,7 @@ public class PatternsInitializer implements BatchExtension {
   }
 
   private File locateFile(String location) {
-    File file = new File(location);
+    File file = new File(projectFileSystem.getBasedir(), location);
     if (!file.isFile()) {
       throw new SonarException("File not found. Please check the parameter " + Constants.LOCATION_PARAMETER_KEY + ": " + location);
     }

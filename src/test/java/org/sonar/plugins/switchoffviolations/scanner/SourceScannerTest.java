@@ -20,32 +20,36 @@
 
 package org.sonar.plugins.switchoffviolations.scanner;
 
-import com.google.common.collect.Lists;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.sonar.api.resources.InputFile;
+import org.sonar.api.resources.InputFileUtils;
 import org.sonar.api.resources.JavaFile;
 import org.sonar.api.resources.Project;
 import org.sonar.api.resources.ProjectFileSystem;
+import org.sonar.api.utils.SonarException;
 import org.sonar.plugins.switchoffviolations.pattern.Pattern;
 import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.fest.assertions.Assertions.assertThat;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class SourceScannerTest {
-
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private SourceScanner scanner;
 
@@ -57,31 +61,17 @@ public class SourceScannerTest {
   private Project project;
   @Mock
   private ProjectFileSystem fileSystem;
-  @Mock
-  private InputFile sourceInputFile;
-  @Mock
-  private InputFile testInputFile;
-  private File sourceFile;
-  private File testFile;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
 
-    sourceFile = new File("Foo.java");
-    testFile = new File("FooTest.java");
-
-    when(project.getFileSystem()).thenReturn(fileSystem);
-    when(project.getLanguageKey()).thenReturn("java");
     when(fileSystem.getSourceCharset()).thenReturn(UTF_8);
-    when(fileSystem.mainFiles("java")).thenReturn(Lists.newArrayList(sourceInputFile));
-    when(fileSystem.testFiles("java")).thenReturn(Lists.newArrayList(testInputFile));
-    when(sourceInputFile.getFile()).thenReturn(sourceFile);
-    when(sourceInputFile.getRelativePath()).thenReturn("Foo.java");
-    when(testInputFile.getFile()).thenReturn(testFile);
-    when(testInputFile.getRelativePath()).thenReturn("FooTest.java");
 
-    scanner = new SourceScanner(regexpScanner, patternsInitializer);
+    scanner = new SourceScanner(regexpScanner, patternsInitializer, fileSystem);
   }
 
   @Test
@@ -94,35 +84,91 @@ public class SourceScannerTest {
     when(patternsInitializer.getAllFilePatterns()).thenReturn(Arrays.asList(new Pattern(), new Pattern()));
     assertThat(scanner.shouldExecuteOnProject(null)).isTrue();
 
-    when(patternsInitializer.getAllFilePatterns()).thenReturn(Collections.<Pattern> emptyList());
+    when(patternsInitializer.getAllFilePatterns()).thenReturn(Collections.<Pattern>emptyList());
     when(patternsInitializer.getBlockPatterns()).thenReturn(Arrays.asList(new Pattern(), new Pattern()));
     assertThat(scanner.shouldExecuteOnProject(null)).isTrue();
 
-    when(patternsInitializer.getAllFilePatterns()).thenReturn(Collections.<Pattern> emptyList());
-    when(patternsInitializer.getBlockPatterns()).thenReturn(Collections.<Pattern> emptyList());
+    when(patternsInitializer.getAllFilePatterns()).thenReturn(Collections.<Pattern>emptyList());
+    when(patternsInitializer.getBlockPatterns()).thenReturn(Collections.<Pattern>emptyList());
     assertThat(scanner.shouldExecuteOnProject(null)).isFalse();
   }
 
   @Test
-  public void shouldAnalyseJavaProject() throws Exception {
+  public void shouldAnalyseJavaProject() throws IOException {
+    File sourceFile = new File("Foo.java");
+    File testFile = new File("FooTest.java");
+
+    when(project.getLanguageKey()).thenReturn("java");
+    when(fileSystem.mainFiles("java")).thenReturn(Arrays.asList(inputFile(sourceFile)));
+    when(fileSystem.testFiles("java")).thenReturn(Arrays.asList(inputFile(testFile)));
+
     scanner.analyse(project, null);
 
-    verify(regexpScanner, times(1)).scan(new JavaFile("[default].Foo"), sourceFile, UTF_8);
-    verify(regexpScanner, times(1)).scan(new JavaFile("[default].FooTest", true), testFile, UTF_8);
+    verify(regexpScanner).scan(new JavaFile("[default].Foo"), sourceFile, UTF_8);
+    verify(regexpScanner).scan(new JavaFile("[default].FooTest", true), testFile, UTF_8);
   }
 
   @Test
-  public void shouldAnalyseOtherProject() throws Exception {
+  public void shouldAnalyseOtherProject() throws IOException {
+    File sourceFile = new File("Foo.php");
+    File testFile = new File("FooTest.php");
+
     when(project.getLanguageKey()).thenReturn("php");
-    when(fileSystem.mainFiles("php")).thenReturn(Lists.newArrayList(sourceInputFile));
-    when(fileSystem.testFiles("php")).thenReturn(Lists.newArrayList(testInputFile));
-    when(sourceInputFile.getRelativePath()).thenReturn("Foo.php");
-    when(testInputFile.getRelativePath()).thenReturn("FooTest.php");
+    when(fileSystem.mainFiles("php")).thenReturn(Arrays.asList(inputFile(sourceFile)));
+    when(fileSystem.testFiles("php")).thenReturn(Arrays.asList(inputFile(testFile)));
 
     scanner.analyse(project, null);
 
-    verify(regexpScanner, times(1)).scan(new org.sonar.api.resources.File("Foo.php"), sourceFile, UTF_8);
-    verify(regexpScanner, times(1)).scan(new org.sonar.api.resources.File("FooTest.php"), testFile, UTF_8);
+    verify(regexpScanner).scan(new org.sonar.api.resources.File("Foo.php"), sourceFile, UTF_8);
+    verify(regexpScanner).scan(new org.sonar.api.resources.File("FooTest.php"), testFile, UTF_8);
   }
 
+  @Test
+  public void shouldAnalyseJavaProjectWithNonJavaFile() throws IOException {
+    File sourceFile = new File("Foo.java");
+    File otherFile = new File("other.js");
+
+    when(project.getLanguageKey()).thenReturn("java");
+    when(fileSystem.mainFiles("java")).thenReturn(Arrays.asList(inputFile(sourceFile), inputFile(otherFile)));
+
+    scanner.analyse(project, null);
+
+    verify(regexpScanner, never()).scan(new org.sonar.api.resources.File("other.js"), sourceFile, UTF_8);
+  }
+
+  @Test
+  public void shouldAnalyseJavaProjectWithInvalidFile() throws IOException {
+    InputFile inputFile = invalidInputFile();
+
+    when(project.getLanguageKey()).thenReturn("java");
+    when(fileSystem.mainFiles("java")).thenReturn(Arrays.asList(inputFile));
+
+    scanner.analyse(project, null);
+
+    verifyZeroInteractions(regexpScanner);
+  }
+
+  @Test
+  public void shouldReportFailure() throws IOException {
+    File sourceFile = new File("Foo.php");
+
+    when(project.getLanguageKey()).thenReturn("php");
+    when(fileSystem.mainFiles("php")).thenReturn(Arrays.asList(inputFile(sourceFile)));
+    doThrow(new IOException("BUG")).when(regexpScanner).scan(new org.sonar.api.resources.File("Foo.php"), sourceFile, UTF_8);
+
+    thrown.expect(SonarException.class);
+    thrown.expectMessage("Unable to read the source file");
+
+    scanner.analyse(project, null);
+  }
+
+  private static InputFile inputFile(File file) {
+    return InputFileUtils.create(null, file.getName());
+  }
+
+  private static InputFile invalidInputFile() {
+    InputFile inputFile = mock(InputFile.class);
+    when(inputFile.getFile()).thenReturn(new File("invalid.java"));
+    return inputFile;
+  }
 }

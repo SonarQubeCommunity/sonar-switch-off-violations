@@ -42,7 +42,8 @@ public class PatternDecoderTest {
   public void shouldReadFileWithAllTypesOfPatterns() {
     File file = TestUtils.getResource(getClass(), "valid.txt");
     List<Pattern> patterns = decoder.decode(file);
-    assertThat(patterns.size()).isEqualTo(7);
+
+    assertThat(patterns).hasSize(7);
   }
 
   @Test
@@ -59,61 +60,63 @@ public class PatternDecoderTest {
       "# exclude a specific rule on a specific file\n" +
       "com.foo.Bar;checkstyle:IllegalRegexp;*\n";
     List<Pattern> patterns = decoder.decode(patternsList);
-    assertThat(patterns.size()).isEqualTo(5);
+
+    assertThat(patterns).hasSize(5);
   }
 
   @Test
   public void shouldCheckFormatOfResource() {
-    assertThat(decoder.isResource("")).isEqualTo(false);
-    assertThat(decoder.isResource("*")).isEqualTo(true);
-    assertThat(decoder.isResource("com.foo.*")).isEqualTo(true);
+    assertThat(decoder.isResource("")).isFalse();
+    assertThat(decoder.isResource("*")).isTrue();
+    assertThat(decoder.isResource("com.foo.*")).isTrue();
   }
 
   @Test
   public void shouldCheckFormatOfRule() {
-    assertThat(decoder.isRule("")).isEqualTo(false);
-    assertThat(decoder.isRule("*")).isEqualTo(true);
-    assertThat(decoder.isRule("com.foo.*")).isEqualTo(true);
+    assertThat(decoder.isRule("")).isFalse();
+    assertThat(decoder.isRule("*")).isTrue();
+    assertThat(decoder.isRule("com.foo.*")).isTrue();
   }
 
   @Test
   public void shouldCheckFormatOfLinesRange() {
-    assertThat(decoder.isLinesRange("")).isEqualTo(false);
-    assertThat(decoder.isLinesRange("   ")).isEqualTo(false);
-    assertThat(decoder.isLinesRange("12")).isEqualTo(false);
-    assertThat(decoder.isLinesRange("12,212")).isEqualTo(false);
+    assertThat(decoder.isLinesRange("")).isFalse();
+    assertThat(decoder.isLinesRange("   ")).isFalse();
+    assertThat(decoder.isLinesRange("12")).isFalse();
+    assertThat(decoder.isLinesRange("12,212")).isFalse();
 
-    assertThat(decoder.isLinesRange("*")).isEqualTo(true);
-    assertThat(decoder.isLinesRange("[]")).isEqualTo(true);
-    assertThat(decoder.isLinesRange("[13]")).isEqualTo(true);
-    assertThat(decoder.isLinesRange("[13,24]")).isEqualTo(true);
-    assertThat(decoder.isLinesRange("[13,24,25-500]")).isEqualTo(true);
-    assertThat(decoder.isLinesRange("[24-65]")).isEqualTo(true);
-    assertThat(decoder.isLinesRange("[13,24-65,84-89,122]")).isEqualTo(true);
+    assertThat(decoder.isLinesRange("*")).isTrue();
+    assertThat(decoder.isLinesRange("[]")).isTrue();
+    assertThat(decoder.isLinesRange("[13]")).isTrue();
+    assertThat(decoder.isLinesRange("[13,24]")).isTrue();
+    assertThat(decoder.isLinesRange("[13,24,25-500]")).isTrue();
+    assertThat(decoder.isLinesRange("[24-65]")).isTrue();
+    assertThat(decoder.isLinesRange("[13,24-65,84-89,122]")).isTrue();
   }
 
   @Test
   public void shouldReadStarPatterns() {
     Pattern pattern = decoder.decodeLine("*;*;*");
+
     assertThat(pattern.getResourcePattern().toString()).isEqualTo("*");
     assertThat(pattern.getRulePattern().toString()).isEqualTo("*");
-    assertThat(pattern.isCheckLines()).isEqualTo(false);
+    assertThat(pattern.isCheckLines()).isFalse();
   }
 
   @Test
   public void shouldReadLineIds() {
     Pattern pattern = decoder.decodeLine("*;*;[10,25,98]");
-    assertThat(pattern.isCheckLines()).isEqualTo(true);
-    assertThat(pattern.getAllLines().size()).isEqualTo(3);
-    assertThat(pattern.getAllLines()).contains(10, 25, 98);
+
+    assertThat(pattern.isCheckLines()).isTrue();
+    assertThat(pattern.getAllLines()).containsOnly(10, 25, 98);
   }
 
   @Test
   public void shouldReadRangeOfLineIds() {
     Pattern pattern = decoder.decodeLine("*;*;[10-12,25,97-100]");
-    assertThat(pattern.isCheckLines()).isEqualTo(true);
-    assertThat(pattern.getAllLines().size()).isEqualTo(8);
-    assertThat(pattern.getAllLines()).contains(10, 11, 12, 25, 97, 98, 99, 100);
+
+    assertThat(pattern.isCheckLines()).isTrue();
+    assertThat(pattern.getAllLines()).containsOnly(10, 11, 12, 25, 97, 98, 99, 100);
   }
 
   @Test
@@ -122,13 +125,15 @@ public class PatternDecoderTest {
     // - all violations are excluded on *
     // * no violations are excluded on []
     Pattern pattern = decoder.decodeLine("*;*;[]");
-    assertThat(pattern.isCheckLines()).isEqualTo(true);
-    assertThat(pattern.getAllLines().size()).isEqualTo(0);
+
+    assertThat(pattern.isCheckLines()).isTrue();
+    assertThat(pattern.getAllLines()).isEmpty();
   }
 
   @Test
   public void shouldReadBlockPattern() {
     Pattern pattern = decoder.decodeLine("SONAR-OFF;SONAR-ON");
+
     assertThat(pattern.getResourcePattern()).isNull();
     assertThat(pattern.getBeginBlockRegexp()).isEqualTo("SONAR-OFF");
     assertThat(pattern.getEndBlockRegexp()).isEqualTo("SONAR-ON");
@@ -137,6 +142,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldReadAllFilePattern() {
     Pattern pattern = decoder.decodeLine("SONAR-ALL-OFF");
+
     assertThat(pattern.getResourcePattern()).isNull();
     assertThat(pattern.getAllFileRegexp()).isEqualTo("SONAR-ALL-OFF");
   }
@@ -152,7 +158,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine1() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The following line has more than 3 fields separated by comma");
+    thrown.expectMessage("Invalid format. The following line has more than 3 fields separated by comma");
 
     decoder.decode(";;;;");
   }
@@ -160,7 +166,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine3() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The first field does not define a resource pattern");
+    thrown.expectMessage("Invalid format. The first field does not define a resource pattern");
 
     decoder.decode(";*;*");
   }
@@ -168,7 +174,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine4() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The second field does not define a rule pattern");
+    thrown.expectMessage("Invalid format. The second field does not define a rule pattern");
 
     decoder.decode("*;;*");
   }
@@ -176,7 +182,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine5() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The third field does not define a range of lines");
+    thrown.expectMessage("Invalid format. The third field does not define a range of lines");
 
     decoder.decode("*;*;blabla");
   }
@@ -184,7 +190,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine6() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The first field does not define a regular expression");
+    thrown.expectMessage("Invalid format. The first field does not define a regular expression");
 
     decoder.decode(";ON");
   }
@@ -192,7 +198,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine7() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The second field does not define a regular expression");
+    thrown.expectMessage("Invalid format. The second field does not define a regular expression");
 
     decoder.decode("OFF;");
   }

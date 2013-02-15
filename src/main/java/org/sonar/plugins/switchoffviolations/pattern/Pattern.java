@@ -22,6 +22,7 @@ package org.sonar.plugins.switchoffviolations.pattern;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 import org.sonar.api.resources.Resource;
 import org.sonar.api.rules.Rule;
 import org.sonar.api.rules.Violation;
@@ -117,30 +118,33 @@ public class Pattern {
 
   public boolean match(Violation violation) {
     boolean match = matchResource(violation.getResource()) && matchRule(violation.getRule());
-    if (match && checkLines && violation.getLineId() != null) {
-      match = matchLine(violation.getLineId());
+    if (checkLines && violation.getLineId() != null) {
+      match = match && matchLine(violation.getLineId());
     }
     return match;
   }
 
   boolean matchLine(int lineId) {
-    boolean match = lines.contains(lineId);
-    if (!match) {
-      for (LineRange range : lineRanges) {
-        if (range.in(lineId)) {
-          return true;
-        }
+    if (lines.contains(lineId)) {
+      return true;
+    }
+
+    for (LineRange range : lineRanges) {
+      if (range.in(lineId)) {
+        return true;
       }
     }
-    return match;
+
+    return false;
   }
 
   boolean matchRule(Rule rule) {
-    if (rule != null) {
-      String key = new StringBuilder().append(rule.getRepositoryKey()).append(':').append(rule.getKey()).toString();
-      return rulePattern.match(key);
+    if (rule == null) {
+      return false;
     }
-    return false;
+
+    String key = new StringBuilder().append(rule.getRepositoryKey()).append(':').append(rule.getKey()).toString();
+    return rulePattern.match(key);
   }
 
   boolean matchResource(Resource<?> resource) {
@@ -149,6 +153,6 @@ public class Pattern {
 
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this);
+    return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 }

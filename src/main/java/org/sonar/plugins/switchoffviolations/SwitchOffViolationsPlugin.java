@@ -20,6 +20,8 @@
 
 package org.sonar.plugins.switchoffviolations;
 
+import com.google.common.collect.ImmutableList;
+import org.sonar.api.BatchExtension;
 import org.sonar.api.Properties;
 import org.sonar.api.Property;
 import org.sonar.api.PropertyField;
@@ -29,7 +31,6 @@ import org.sonar.plugins.switchoffviolations.pattern.PatternsInitializer;
 import org.sonar.plugins.switchoffviolations.scanner.RegexpScanner;
 import org.sonar.plugins.switchoffviolations.scanner.SourceScanner;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Properties({
@@ -46,19 +47,19 @@ import java.util.List;
         name = "Resource Key Pattern",
         description = "Pattern used to match resources which should be ignored.",
         type = PropertyType.STRING,
-        indicativeSize = 20),
+        indicativeSize = SwitchOffViolationsPlugin.LARGE_SIZE),
       @PropertyField(
         key = Constants.RULE_KEY,
         name = "Rule Key Pattern",
         description = "Pattern used to match rules which should be ignored.",
         type = PropertyType.STRING,
-        indicativeSize = 20),
+        indicativeSize = SwitchOffViolationsPlugin.LARGE_SIZE),
       @PropertyField(
         key = Constants.LINE_RANGE_KEY,
         name = "Line Range",
         description = "Range of lines that should be ignored.",
         type = PropertyType.STRING,
-        indicativeSize = 10)}),
+        indicativeSize = SwitchOffViolationsPlugin.SMALL_SIZE)}),
   @Property(
     key = Constants.PATTERNS_BLOCK_KEY,
     name = "Bloc exclusion patterns",
@@ -72,14 +73,14 @@ import java.util.List;
         name = "Regular expression for start of block",
         description = "If this regular expression is found in a resource, then following lines are ignored until end of block.",
         type = PropertyType.STRING,
-        indicativeSize = 20),
+        indicativeSize = SwitchOffViolationsPlugin.LARGE_SIZE),
       @PropertyField(
         key = Constants.END_BLOCK_REGEXP,
         name = "Regular expression for end of block",
         description =
         "If specified, this regular expression is used to determine the end of code blocks to ignore. If not, then block ends at the end of file.",
         type = PropertyType.STRING,
-        indicativeSize = 20)}),
+        indicativeSize = SwitchOffViolationsPlugin.LARGE_SIZE)}),
   @Property(
     key = Constants.PATTERNS_ALLFILE_KEY,
     name = "File exclusion patterns",
@@ -93,7 +94,7 @@ import java.util.List;
         name = "Regular expression",
         description = "If this regular expression is found in a resource, then this resource is ignored.",
         type = PropertyType.STRING,
-        indicativeSize = 20)}),
+        indicativeSize = SwitchOffViolationsPlugin.LARGE_SIZE)}),
   @Property(
     key = Constants.PATTERNS_PARAMETER_KEY,
     defaultValue = "",
@@ -114,9 +115,11 @@ import java.util.List;
 })
 public final class SwitchOffViolationsPlugin extends SonarPlugin {
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public List getExtensions() {
-    return Arrays.asList(
+  static final int LARGE_SIZE = 20;
+  static final int SMALL_SIZE = 10;
+
+  public List<Class<? extends BatchExtension>> getExtensions() {
+    return ImmutableList.of(
         PatternsInitializer.class,
         RegexpScanner.class,
         SourceScanner.class,

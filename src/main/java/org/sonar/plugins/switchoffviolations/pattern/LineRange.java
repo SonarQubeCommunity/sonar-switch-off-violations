@@ -20,17 +20,18 @@
 
 package org.sonar.plugins.switchoffviolations.pattern;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
 
 public class LineRange {
-  int from, to;
+  private int from;
+  private int to;
 
   public LineRange(int from, int to) {
-    if (to < from) {
-      throw new IllegalArgumentException("Line range is not valid: " + from + " must be greater than " + to);
-    }
+    Preconditions.checkArgument(from <= to, "Line range is not valid: %s must be greater than %s", from, to);
+
     this.from = from;
     this.to = to;
   }
