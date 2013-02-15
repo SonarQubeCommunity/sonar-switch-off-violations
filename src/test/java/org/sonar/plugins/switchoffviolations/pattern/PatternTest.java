@@ -22,9 +22,12 @@ package org.sonar.plugins.switchoffviolations.pattern;
 
 import org.junit.Test;
 import org.sonar.api.resources.JavaFile;
+import org.sonar.api.resources.Resource;
 import org.sonar.api.rules.Rule;
+import org.sonar.api.rules.Violation;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class PatternTest {
 
@@ -52,6 +55,8 @@ public class PatternTest {
     assertThat(new Pattern("org.other.Hello", "*").matchResource(javaFile)).isFalse();
     assertThat(new Pattern("org.foo.Hello", "*").matchResource(javaFile)).isFalse();
     assertThat(new Pattern("org.*.??ar", "*").matchResource(javaFile)).isFalse();
+    assertThat(new Pattern("org.*.??ar", "*").matchResource(null)).isFalse();
+    assertThat(new Pattern("org.*.??ar", "*").matchResource(mock(Resource.class))).isFalse();
   }
 
   @Test
@@ -66,5 +71,32 @@ public class PatternTest {
     assertThat(new Pattern("*", "pmd:IllegalRegexp").matchRule(rule)).isFalse();
     assertThat(new Pattern("*", "pmd:*").matchRule(rule)).isFalse();
     assertThat(new Pattern("*", "*:Foo*IllegalRegexp").matchRule(rule)).isFalse();
+  }
+
+  @Test
+  public void shouldMatchViolation() {
+    Rule rule = Rule.create("checkstyle", "IllegalRegexp", "");
+    JavaFile javaFile = new JavaFile("org.foo.Bar");
+
+    Pattern pattern = new Pattern("*", "*");
+    pattern.addLine(12);
+
+    assertThat(pattern.match(Violation.create(rule, javaFile))).isTrue();
+    assertThat(pattern.match(Violation.create(rule, javaFile).setLineId(12))).isTrue();
+    assertThat(pattern.match(Violation.create((Rule) null, javaFile).setLineId(5))).isFalse();
+    assertThat(pattern.match(Violation.create(rule, null))).isFalse();
+    assertThat(pattern.match(Violation.create((Rule) null, null))).isFalse();
+  }
+
+  @Test
+  public void shouldNotMatchNullRule() {
+    assertThat(new Pattern("*", "*").matchRule(null)).isFalse();
+  }
+
+  @Test
+  public void shouldPrintPatternToString() {
+    Pattern pattern = new Pattern("*", "checkstyle:*");
+
+    assertThat(pattern.toString()).isEqualTo("Pattern[resourcePattern=*,rulePattern=checkstyle:*,lines=[],lineRanges=[],beginBlockRegexp=<null>,endBlockRegexp=<null>,allFileRegexp=<null>,checkLines=true]");
   }
 }

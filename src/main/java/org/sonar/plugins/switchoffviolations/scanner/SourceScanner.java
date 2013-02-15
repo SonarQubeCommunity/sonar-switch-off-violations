@@ -39,12 +39,14 @@ import java.util.List;
 @Phase(name = Phase.Name.PRE)
 public final class SourceScanner implements Sensor {
 
-  private RegexpScanner scanner;
-  private PatternsInitializer patternsInitializer;
+  private final RegexpScanner regexpScanner;
+  private final PatternsInitializer patternsInitializer;
+  private final ProjectFileSystem fileSystem;
 
-  public SourceScanner(RegexpScanner scanner, PatternsInitializer patternsInitializer) {
-    this.scanner = scanner;
+  public SourceScanner(RegexpScanner regexpScanner, PatternsInitializer patternsInitializer, ProjectFileSystem fileSystem) {
+    this.regexpScanner = regexpScanner;
     this.patternsInitializer = patternsInitializer;
+    this.fileSystem = fileSystem;
   }
 
   public boolean shouldExecuteOnProject(Project project) {
@@ -60,7 +62,6 @@ public final class SourceScanner implements Sensor {
   }
 
   protected void parseDirs(Project project, boolean isTest) {
-    ProjectFileSystem fileSystem = project.getFileSystem();
     Charset sourcesEncoding = fileSystem.getSourceCharset();
 
     List<InputFile> files;
@@ -75,7 +76,7 @@ public final class SourceScanner implements Sensor {
       if (resource != null) {
         File file = inputFile.getFile();
         try {
-          scanner.scan(resource, file, sourcesEncoding);
+          regexpScanner.scan(resource, file, sourcesEncoding);
         } catch (Exception e) {
           throw new SonarException("Unable to read the source file : '" + file.getAbsolutePath() + "' with the charset : '"
             + sourcesEncoding.name() + "'.", e);
@@ -88,13 +89,10 @@ public final class SourceScanner implements Sensor {
    * This method is necessary because Java resources are not treated as every other resource...
    */
   private Resource<?> defineResource(InputFile inputFile, Project project, boolean isTest) {
-    Resource<?> resource;
     if (Java.KEY.equals(project.getLanguageKey()) && Java.isJavaFile(inputFile.getFile())) {
-      resource = JavaFile.fromRelativePath(inputFile.getRelativePath(), isTest);
-    } else {
-      resource = new org.sonar.api.resources.File(inputFile.getRelativePath());
+      return JavaFile.fromRelativePath(inputFile.getRelativePath(), isTest);
     }
-    return resource;
+    return new org.sonar.api.resources.File(inputFile.getRelativePath());
   }
 
   @Override
