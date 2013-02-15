@@ -158,7 +158,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine1() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The following line has more than 3 fields separated by comma");
+    thrown.expectMessage("Invalid format. The following line has more than 3 fields separated by comma");
 
     decoder.decode(";;;;");
   }
@@ -166,7 +166,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine3() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The first field does not define a resource pattern");
+    thrown.expectMessage("Invalid format. The first field does not define a resource pattern");
 
     decoder.decode(";*;*");
   }
@@ -174,7 +174,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine4() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The second field does not define a rule pattern");
+    thrown.expectMessage("Invalid format. The second field does not define a rule pattern");
 
     decoder.decode("*;;*");
   }
@@ -182,7 +182,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine5() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The third field does not define a range of lines");
+    thrown.expectMessage("Invalid format. The third field does not define a range of lines");
 
     decoder.decode("*;*;blabla");
   }
@@ -190,7 +190,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine6() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The first field does not define a regular expression");
+    thrown.expectMessage("Invalid format. The first field does not define a regular expression");
 
     decoder.decode(";ON");
   }
@@ -198,7 +198,7 @@ public class PatternDecoderTest {
   @Test
   public void shouldFailToReadUncorrectLine7() {
     thrown.expect(SonarException.class);
-    thrown.expectMessage("Unvalid format. The second field does not define a regular expression");
+    thrown.expectMessage("Invalid format. The second field does not define a regular expression");
 
     decoder.decode("OFF;");
   }
