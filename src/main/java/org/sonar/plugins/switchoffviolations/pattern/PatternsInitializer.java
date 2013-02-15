@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.BatchExtension;
 import org.sonar.api.config.Settings;
+import org.sonar.api.resources.ProjectFileSystem;
 import org.sonar.api.resources.Resource;
 import org.sonar.api.utils.SonarException;
 import org.sonar.plugins.switchoffviolations.Constants;
@@ -44,14 +45,17 @@ public class PatternsInitializer implements BatchExtension {
 
   private static final Logger LOG = LoggerFactory.getLogger(PatternsInitializer.class);
 
-  private Settings settings;
+  private final Settings settings;
+  private final ProjectFileSystem projectFileSystem;
+
   private List<Pattern> multicriteriaPatterns;
   private List<Pattern> blockPatterns;
   private List<Pattern> allFilePatterns;
   private Map<Resource<?>, Pattern> extraPatternByResource = Maps.newHashMap();
 
-  public PatternsInitializer(Settings settings) {
+  public PatternsInitializer(Settings settings, ProjectFileSystem projectFileSystem) {
     this.settings = settings;
+    this.projectFileSystem = projectFileSystem;
     initPatterns();
   }
 
@@ -138,7 +142,7 @@ public class PatternsInitializer implements BatchExtension {
   }
 
   private File locateFile(String location) {
-    File file = new File(location);
+    File file = new File(projectFileSystem.getBasedir(), location);
     if (!file.isFile()) {
       throw new SonarException("File not found. Please check the parameter " + Constants.LOCATION_PARAMETER_KEY + ": " + location);
     }

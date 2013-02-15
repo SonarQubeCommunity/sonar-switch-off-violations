@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
+import org.sonar.api.resources.ProjectFileSystem;
 import org.sonar.api.utils.SonarException;
 import org.sonar.plugins.switchoffviolations.Constants;
 import org.sonar.plugins.switchoffviolations.SwitchOffViolationsPlugin;
@@ -35,16 +36,20 @@ import java.io.IOException;
 import java.util.Set;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class PatternsInitializerTest {
 
-  private Settings settings;
   private PatternsInitializer patternsInitializer;
+
+  private Settings settings;
+  private ProjectFileSystem projectFileSystem = mock(ProjectFileSystem.class);
 
   @Before
   public void init() {
     settings = new Settings(new PropertyDefinitions(new SwitchOffViolationsPlugin()));
-    patternsInitializer = new PatternsInitializer(settings);
+    patternsInitializer = new PatternsInitializer(settings, projectFileSystem);
   }
 
   @Test
@@ -65,6 +70,17 @@ public class PatternsInitializerTest {
   public void shouldLoadConfigurationFile() throws IOException {
     File file = TestUtils.getResource(getClass(), "filter.txt");
     settings.setProperty(Constants.LOCATION_PARAMETER_KEY, file.getCanonicalPath());
+    patternsInitializer.initPatterns();
+
+    assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(3);
+  }
+
+  @Test
+  public void shouldLookForConfigurationFileInProjectBasedir() throws IOException {
+    File file = TestUtils.getResource(getClass(), "filter.txt");
+    when(projectFileSystem.getBasedir()).thenReturn(file.getParentFile());
+
+    settings.setProperty(Constants.LOCATION_PARAMETER_KEY, "filter.txt");
     patternsInitializer.initPatterns();
 
     assertThat(patternsInitializer.getMulticriteriaPatterns().size()).isEqualTo(3);
