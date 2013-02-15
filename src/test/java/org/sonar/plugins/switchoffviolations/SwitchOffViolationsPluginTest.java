@@ -22,12 +22,11 @@ package org.sonar.plugins.switchoffviolations;
 
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.fest.assertions.Assertions.assertThat;
 
 public class SwitchOffViolationsPluginTest {
   @Test
   public void justForCoverage() {
-    assertThat(new SwitchOffViolationsPlugin().getExtensions().size(), is(4));
+    assertThat(new SwitchOffViolationsPlugin().getExtensions()).hasSize(4);
   }
 }

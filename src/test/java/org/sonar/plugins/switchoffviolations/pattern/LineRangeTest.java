@@ -23,9 +23,6 @@ package org.sonar.plugins.switchoffviolations.pattern;
 import org.junit.Test;
 
 import static org.fest.assertions.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.hasItems;
 
 public class LineRangeTest {
 
@@ -37,13 +34,14 @@ public class LineRangeTest {
   @Test
   public void shouldConvertLineRangeToLines() {
     LineRange range = new LineRange(12, 15);
-    assertThat(range.toLines().size(), is(4));
-    assertThat(range.toLines(), hasItems(12, 13, 14, 15));
+
+    assertThat(range.toLines()).containsOnly(12, 13, 14, 15);
   }
 
   @Test
   public void shouldTestInclusionInRangeOfLines() {
     LineRange range = new LineRange(12, 15);
+
     assertThat(range.in(3)).isFalse();
     assertThat(range.in(12)).isTrue();
     assertThat(range.in(13)).isTrue();
